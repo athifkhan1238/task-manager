@@ -1,6 +1,6 @@
 {
   "name": "Task Manager",
-  "short_name": "Tasks",
+  "short_name": "Task Manager",
   "description": "Manage your tasks with due date reminders. Works fully offline.",
   "start_url": "./index.html",
   "scope": "./",
