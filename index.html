@@ -332,15 +332,15 @@
 
         /* ── OFFLINE BANNER ─────────────────────────────── */
         #offlineBanner{
-            position:fixed;top:0;left:0;right:0;z-index:99997;
+            position:fixed;top:-80px;left:0;right:0;z-index:99999;
             background:#1e293b;color:white;
             padding:0.7rem 1.5rem;
             display:flex;align-items:center;justify-content:center;gap:0.75rem;
             font-size:0.85rem;font-weight:600;
-            transform:translateY(-110%);
-            transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);
+            transition:top 0.4s cubic-bezier(0.4,0,0.2,1);
+            box-shadow:0 4px 12px rgba(0,0,0,0.3);
         }
-        #offlineBanner.show{transform:translateY(0);}
+        #offlineBanner.show{top:0;}
         #offlineBanner.online{background:#064e3b;}
     </style>
 </head>
