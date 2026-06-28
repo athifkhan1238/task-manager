@@ -1185,23 +1185,30 @@ window.taskManager=taskManager;
         const offlineBanner = document.getElementById('offlineBanner');
         const offlineIcon   = document.getElementById('offlineIcon');
         const offlineMsg    = document.getElementById('offlineMsg');
+        let offlineTimer    = null;
 
         function showOffline() {
+            // Clear any running timer first
+            if (offlineTimer) clearTimeout(offlineTimer);
             offlineIcon.className = 'fas fa-wifi-slash';
             offlineIcon.style.color = '#fbbf24';
             offlineMsg.textContent = 'You are offline — app still works, tasks are saved!';
             offlineBanner.style.background = '#1e293b';
             offlineBanner.classList.add('show');
+            // Auto hide after 4 seconds
+            offlineTimer = setTimeout(() => offlineBanner.classList.remove('show'), 4000);
         }
 
         function showOnline() {
+            // Clear any running timer first
+            if (offlineTimer) clearTimeout(offlineTimer);
             offlineIcon.className = 'fas fa-wifi';
             offlineIcon.style.color = '#34d399';
             offlineMsg.textContent = 'Back online!';
             offlineBanner.style.background = '#064e3b';
             offlineBanner.classList.add('show');
-            // Hide after 3 seconds
-            setTimeout(() => offlineBanner.classList.remove('show'), 3000);
+            // Auto hide after 3 seconds
+            offlineTimer = setTimeout(() => offlineBanner.classList.remove('show'), 3000);
         }
 
         window.addEventListener('offline', showOffline);
