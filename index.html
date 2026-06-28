@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Manager</title>
     <meta name="description" content="Modern responsive task management web app built with HTML5, CSS3, JavaScript.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Task Manager">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -278,6 +284,51 @@
             80%{width:95%;}
             100%{width:100%;}
         }
+
+        /* ── INSTALL BANNER ─────────────────────────────── */
+        #installBanner{
+            position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);
+            background:linear-gradient(135deg,var(--primary),#a855f7);
+            color:white;border-radius:var(--radius);padding:1rem 1.5rem;
+            display:flex;align-items:center;gap:1rem;
+            box-shadow:0 8px 30px rgba(99,102,241,0.4);
+            z-index:9998;animation:slideUpIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+            max-width:360px;width:90%;
+        }
+        #installBanner.hidden{display:none;}
+        #installBanner .banner-text{flex:1;font-size:0.875rem;font-weight:600;line-height:1.4;}
+        #installBanner .banner-text span{display:block;font-size:0.75rem;font-weight:400;opacity:0.85;margin-top:0.15rem;}
+        #installBanner .install-btn{background:white;color:var(--primary);border:none;border-radius:var(--radius-sm);padding:0.5rem 1rem;font-weight:700;font-size:0.8rem;cursor:pointer;white-space:nowrap;font-family:inherit;}
+        #installBanner .dismiss-btn{background:transparent;border:none;color:white;cursor:pointer;font-size:1rem;padding:0.2rem;opacity:0.75;}
+        #installBanner .dismiss-btn:hover{opacity:1;}
+        @keyframes slideUpIn{from{opacity:0;transform:translateX(-50%) translateY(20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+
+        /* ── NOTIFICATION BELL ──────────────────────────── */
+        #notifBell{
+            position:relative;background:var(--bg-secondary);border:1px solid var(--border);
+            border-radius:var(--radius-sm);padding:0.6rem 0.9rem;cursor:pointer;
+            display:flex;align-items:center;gap:0.4rem;font-size:0.875rem;font-weight:600;
+            color:var(--text-primary);font-family:inherit;transition:var(--transition);
+        }
+        #notifBell:hover{background:var(--primary);color:white;border-color:var(--primary);}
+        #notifBell .bell-badge{
+            position:absolute;top:-5px;right:-5px;background:var(--danger);color:white;
+            border-radius:99px;font-size:0.6rem;font-weight:700;
+            padding:0.1rem 0.35rem;min-width:16px;text-align:center;display:none;
+        }
+        #notifBell .bell-badge.show{display:block;}
+
+        /* ── NOTIF PERMISSION BOX ───────────────────────── */
+        #notifBox{
+            background:var(--primary-light);border:1.5px solid var(--primary);
+            border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.5rem;
+            display:flex;align-items:center;gap:1rem;
+        }
+        #notifBox.hidden{display:none;}
+        #notifBox .notif-text{flex:1;font-size:0.875rem;font-weight:500;color:var(--text-primary);}
+        #notifBox .notif-text strong{display:block;margin-bottom:0.15rem;}
+        #notifBox .allow-btn{background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);padding:0.5rem 1rem;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap;}
+        #notifBox .deny-btn{background:transparent;border:none;color:var(--text-secondary);cursor:pointer;font-size:1rem;padding:0.2rem;}
     </style>
 </head>
 <body>
@@ -289,6 +340,16 @@
     <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
 </div>
 
+
+<!-- Install Banner (shown when PWA installable) -->
+<div id="installBanner" class="hidden">
+    <i class="fas fa-layer-group" style="font-size:1.4rem;flex-shrink:0;"></i>
+    <div class="banner-text">Install Task Manager
+        <span>Add to home screen for the full app experience</span>
+    </div>
+    <button class="install-btn" id="installBtn">Install</button>
+    <button class="dismiss-btn" id="dismissBanner"><i class="fas fa-times"></i></button>
+</div>
 <!-- Header -->
 <header class="header">
     <div class="header-container">
@@ -297,6 +358,7 @@
             <span data-translate="logoText">Task Manager</span>
         </div>
         <div class="header-actions">
+            <button id="notifBell" title="Due date reminders"><i class="fas fa-bell"></i><span class="bell-badge" id="bellBadge"></span></button>
             <button class="settings-open-btn" id="settingsBtn">
                 <i class="fas fa-cog"></i>
                 <span>Settings</span>
@@ -316,6 +378,18 @@
 
 <!-- Main -->
 <div class="container">
+
+<!-- Notification permission nudge -->
+<div id="notifBox" class="hidden">
+    <i class="fas fa-bell" style="font-size:1.5rem;color:var(--primary);flex-shrink:0;"></i>
+    <div class="notif-text">
+        <strong>Enable Due Date Reminders</strong>
+        Get notified before your tasks are due
+    </div>
+    <button class="allow-btn" id="allowNotifBtn">Allow</button>
+    <button class="deny-btn" id="denyNotifBtn"><i class="fas fa-times"></i></button>
+</div>
+
     <!-- Stats -->
     <div class="stats-grid">
         <div class="stat-card active" id="statCardTotal">
@@ -1056,7 +1130,7 @@ class TaskManager {
         if(this.priorityFilter!=='all')document.getElementById('statCardPriority').classList.add('active');
     }
 
-    saveToStorage(){localStorage.setItem('tasks',JSON.stringify(this.tasks));}
+    saveToStorage(){localStorage.setItem('tasks',JSON.stringify(this.tasks));if(typeof refreshBellBadge==='function')refreshBellBadge();}
 
     setupDragAndDrop(){
         const board=document.getElementById('tasksBoard');
@@ -1086,6 +1160,180 @@ class TaskManager {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 const taskManager=new TaskManager();
 window.taskManager=taskManager;
+
+
+        // ── PWA: REGISTER SERVICE WORKER ─────────────────
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error:', err));
+            });
+        }
+
+        // ── PWA: INSTALL BANNER ───────────────────────────
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBanner').classList.remove('hidden');
+        });
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            document.getElementById('installBanner').classList.add('hidden');
+        });
+        document.getElementById('dismissBanner').addEventListener('click', () => {
+            document.getElementById('installBanner').classList.add('hidden');
+        });
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('installBanner').classList.add('hidden');
+            showToast('App installed! Find it on your home screen 🎉', 'success');
+        });
+
+        // ── NOTIFICATIONS: PERMISSION + SCHEDULING ────────
+        const NOTIF_KEY = 'notif_permission_asked';
+
+        function askNotificationPermission() {
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'granted') return;
+            if (localStorage.getItem(NOTIF_KEY)) return;
+            // Show the nudge box after 3 seconds
+            setTimeout(() => {
+                document.getElementById('notifBox').classList.remove('hidden');
+            }, 3000);
+        }
+
+        document.getElementById('allowNotifBtn').addEventListener('click', async () => {
+            const permission = await Notification.requestPermission();
+            document.getElementById('notifBox').classList.add('hidden');
+            localStorage.setItem(NOTIF_KEY, '1');
+            if (permission === 'granted') {
+                showToast('Notifications enabled! You will be reminded before due dates.', 'success');
+                scheduleNotifications();
+            } else {
+                showToast('Notifications blocked. You can enable them in browser settings.', 'warning');
+            }
+        });
+
+        document.getElementById('denyNotifBtn').addEventListener('click', () => {
+            document.getElementById('notifBox').classList.add('hidden');
+            localStorage.setItem(NOTIF_KEY, '1');
+        });
+
+        // Bell icon manually triggers permission
+        document.getElementById('notifBell').addEventListener('click', async () => {
+            if (!('Notification' in window)) {
+                showToast('Your browser does not support notifications', 'error');
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                showToast('Notifications already enabled!', 'info');
+                checkAndNotifyDueTasks();
+            } else {
+                const permission = await Notification.requestPermission();
+                localStorage.setItem(NOTIF_KEY, '1');
+                if (permission === 'granted') {
+                    showToast('Notifications enabled!', 'success');
+                    scheduleNotifications();
+                } else {
+                    showToast('Notifications blocked in browser settings', 'warning');
+                }
+            }
+        });
+
+        // ── CHECK DUE TASKS & SEND NOTIFICATIONS ──────────
+        function checkAndNotifyDueTasks() {
+            if (Notification.permission !== 'granted') return;
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            const today = new Date().toISOString().slice(0, 10);
+            const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+            let urgentCount = 0;
+
+            tasks.filter(t => t.status !== 'done' && t.dueDate).forEach(task => {
+                if (task.dueDate < today) {
+                    // Overdue
+                    sendNotification(
+                        '⚠️ Overdue Task!',
+                        `"${task.title}" was due on ${formatDate(task.dueDate)}. Complete it now!`,
+                        'overdue-' + task.id
+                    );
+                    urgentCount++;
+                } else if (task.dueDate === today) {
+                    // Due today
+                    sendNotification(
+                        '🔔 Due Today!',
+                        `"${task.title}" is due today. Don't forget!`,
+                        'today-' + task.id
+                    );
+                    urgentCount++;
+                } else if (task.dueDate === tomorrow) {
+                    // Due tomorrow
+                    sendNotification(
+                        '📅 Due Tomorrow',
+                        `"${task.title}" is due tomorrow. Time to get started!`,
+                        'tomorrow-' + task.id
+                    );
+                    urgentCount++;
+                }
+            });
+
+            // Update bell badge
+            const badge = document.getElementById('bellBadge');
+            if (urgentCount > 0) {
+                badge.textContent = urgentCount > 9 ? '9+' : urgentCount;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+                if (Notification.permission === 'granted') {
+                    showToast('No urgent tasks right now. You are all good!', 'info');
+                }
+            }
+        }
+
+        function sendNotification(title, body, tag) {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'NOTIFY', title, body, tag });
+            } else {
+                new Notification(title, { body, tag, icon: './icon-192.png' });
+            }
+        }
+
+        function scheduleNotifications() {
+            // Run once immediately
+            checkAndNotifyDueTasks();
+            // Then run every 30 minutes
+            setInterval(checkAndNotifyDueTasks, 30 * 60 * 1000);
+        }
+
+        // Update bell badge whenever tasks change
+        function refreshBellBadge() {
+            if (Notification.permission !== 'granted') return;
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            const today = new Date().toISOString().slice(0, 10);
+            const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+            const urgent = tasks.filter(t =>
+                t.status !== 'done' && t.dueDate &&
+                (t.dueDate <= today || t.dueDate === tomorrow)
+            ).length;
+            const badge = document.getElementById('bellBadge');
+            if (urgent > 0) {
+                badge.textContent = urgent > 9 ? '9+' : urgent;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+        }
+
+        // Start everything after app loads
+        window.addEventListener('load', () => {
+            askNotificationPermission();
+            setTimeout(refreshBellBadge, 1000);
+            if (Notification.permission === 'granted') {
+                scheduleNotifications();
+            }
+        });
+
 
         // ── SPLASH ───────────────────────────────────────
         window.addEventListener('load', () => {
