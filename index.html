@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Task Manager">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="./icon.svg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -329,9 +329,29 @@
         #notifBox .notif-text strong{display:block;margin-bottom:0.15rem;}
         #notifBox .allow-btn{background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);padding:0.5rem 1rem;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap;}
         #notifBox .deny-btn{background:transparent;border:none;color:var(--text-secondary);cursor:pointer;font-size:1rem;padding:0.2rem;}
+
+        /* ── OFFLINE BANNER ─────────────────────────────── */
+        #offlineBanner{
+            position:fixed;top:0;left:0;right:0;z-index:99997;
+            background:#1e293b;color:white;
+            padding:0.6rem 1.5rem;
+            display:flex;align-items:center;justify-content:center;gap:0.75rem;
+            font-size:0.85rem;font-weight:600;
+            transform:translateY(-100%);
+            transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
+        }
+        #offlineBanner.show{transform:translateY(0);}
+        #offlineBanner i{color:#fbbf24;}
+        #offlineBanner .online-msg{color:#34d399;}
     </style>
 </head>
 <body>
+<!-- Offline Banner -->
+<div id="offlineBanner">
+    <i class="fas fa-wifi" id="offlineIcon"></i>
+    <span id="offlineMsg">You are offline — app still works, tasks are saved!</span>
+</div>
+
 
 <!-- Splash Screen -->
 <div id="splash">
@@ -1161,12 +1181,54 @@ class TaskManager {
 const taskManager=new TaskManager();
 window.taskManager=taskManager;
 
+        // ── OFFLINE DETECTION ────────────────────────────
+        const offlineBanner = document.getElementById('offlineBanner');
+        const offlineIcon   = document.getElementById('offlineIcon');
+        const offlineMsg    = document.getElementById('offlineMsg');
 
-        // ── PWA: REGISTER SERVICE WORKER ─────────────────
+        function showOffline() {
+            offlineIcon.className = 'fas fa-wifi-slash';
+            offlineIcon.style.color = '#fbbf24';
+            offlineMsg.textContent = 'You are offline — app still works, tasks are saved!';
+            offlineBanner.style.background = '#1e293b';
+            offlineBanner.classList.add('show');
+        }
+
+        function showOnline() {
+            offlineIcon.className = 'fas fa-wifi';
+            offlineIcon.style.color = '#34d399';
+            offlineMsg.textContent = 'Back online!';
+            offlineBanner.style.background = '#064e3b';
+            offlineBanner.classList.add('show');
+            // Hide after 3 seconds
+            setTimeout(() => offlineBanner.classList.remove('show'), 3000);
+        }
+
+        window.addEventListener('offline', showOffline);
+        window.addEventListener('online',  showOnline);
+
+        // Check on load too
+        if (!navigator.onLine) showOffline();
+
+
+
+        // ── PWA: REGISTER SERVICE WORKER (immediately, not on load) ────────
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error:', err));
-            });
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => {
+                    console.log('[App] SW registered:', reg.scope);
+                    // If there is a new SW waiting, activate it immediately
+                    if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    reg.addEventListener('updatefound', () => {
+                        const newSW = reg.installing;
+                        newSW.addEventListener('statechange', () => {
+                            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                                newSW.postMessage({ type: 'SKIP_WAITING' });
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.log('[App] SW error:', err));
         }
 
         // ── PWA: INSTALL BANNER ───────────────────────────
@@ -1295,7 +1357,7 @@ window.taskManager=taskManager;
             if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.controller.postMessage({ type: 'NOTIFY', title, body, tag });
             } else {
-                new Notification(title, { body, tag, icon: './icon-192.png' });
+                new Notification(title, { body, tag, icon: './icon.svg' });
             }
         }
 
