@@ -334,22 +334,21 @@
         #offlineBanner{
             position:fixed;top:0;left:0;right:0;z-index:99997;
             background:#1e293b;color:white;
-            padding:0.6rem 1.5rem;
+            padding:0.7rem 1.5rem;
             display:flex;align-items:center;justify-content:center;gap:0.75rem;
             font-size:0.85rem;font-weight:600;
-            transform:translateY(-100%);
-            transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
+            transform:translateY(-110%);
+            transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);
         }
         #offlineBanner.show{transform:translateY(0);}
-        #offlineBanner i{color:#fbbf24;}
-        #offlineBanner .online-msg{color:#34d399;}
+        #offlineBanner.online{background:#064e3b;}
     </style>
 </head>
 <body>
 <!-- Offline Banner -->
 <div id="offlineBanner">
-    <i class="fas fa-wifi" id="offlineIcon"></i>
-    <span id="offlineMsg">You are offline — app still works, tasks are saved!</span>
+    <i id="offlineIcon" class="fas fa-triangle-exclamation"></i>
+    <span id="offlineMsg"></span>
 </div>
 
 
@@ -1187,35 +1186,38 @@ window.taskManager=taskManager;
         const offlineMsg    = document.getElementById('offlineMsg');
         let offlineTimer    = null;
 
-        function showOffline() {
-            // Clear any running timer first
-            if (offlineTimer) clearTimeout(offlineTimer);
-            offlineIcon.className = 'fas fa-wifi-slash';
-            offlineIcon.style.color = '#fbbf24';
-            offlineMsg.textContent = 'You are offline — app still works, tasks are saved!';
-            offlineBanner.style.background = '#1e293b';
+        function showBanner(isOffline) {
+            // Clear any existing hide timer
+            if (offlineTimer) { clearTimeout(offlineTimer); offlineTimer = null; }
+
+            if (isOffline) {
+                // Offline — yellow warning icon, dark background
+                offlineBanner.classList.remove('online');
+                offlineIcon.className = 'fas fa-triangle-exclamation';
+                offlineIcon.style.color = '#fbbf24';
+                offlineMsg.textContent = 'You are offline — app still works, tasks are saved!';
+            } else {
+                // Back online — green check icon, green background
+                offlineBanner.classList.add('online');
+                offlineIcon.className = 'fas fa-circle-check';
+                offlineIcon.style.color = '#34d399';
+                offlineMsg.textContent = 'Back online!';
+            }
+
+            // Slide down to show
             offlineBanner.classList.add('show');
-            // Auto hide after 4 seconds
-            offlineTimer = setTimeout(() => offlineBanner.classList.remove('show'), 4000);
+
+            // Auto hide after 4 seconds (offline) or 3 seconds (online)
+            offlineTimer = setTimeout(() => {
+                offlineBanner.classList.remove('show');
+            }, isOffline ? 4000 : 3000);
         }
 
-        function showOnline() {
-            // Clear any running timer first
-            if (offlineTimer) clearTimeout(offlineTimer);
-            offlineIcon.className = 'fas fa-wifi';
-            offlineIcon.style.color = '#34d399';
-            offlineMsg.textContent = 'Back online!';
-            offlineBanner.style.background = '#064e3b';
-            offlineBanner.classList.add('show');
-            // Auto hide after 3 seconds
-            offlineTimer = setTimeout(() => offlineBanner.classList.remove('show'), 3000);
-        }
+        window.addEventListener('offline', () => showBanner(true));
+        window.addEventListener('online',  () => showBanner(false));
 
-        window.addEventListener('offline', showOffline);
-        window.addEventListener('online',  showOnline);
-
-        // Check on load too
-        if (!navigator.onLine) showOffline();
+        // Check immediately on page load
+        if (!navigator.onLine) showBanner(true);
 
 
 
