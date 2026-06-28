@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background — same as splash icon -->
+  <rect width="512" height="512" rx="115" ry="115" fill="url(#grad)"/>
+
+  <!-- Layer-group icon drawn manually — 3 stacked layers like Font Awesome fa-layer-group -->
+  <!-- Bottom layer (most transparent) -->
+  <polygon
+    points="256,340  80,260  256,180  432,260"
+    fill="white" opacity="0.4"/>
+
+  <!-- Middle layer -->
+  <polygon
+    points="256,290  80,210  256,130  432,210"
+    fill="white" opacity="0.65"/>
+
+  <!-- Top layer (fully opaque) -->
+  <polygon
+    points="256,240  80,160  256,80  432,160"
+    fill="white" opacity="1"/>
+
+  <!-- Connecting sides for 3D depth effect on bottom -->
+  <polygon points="80,160 80,260 256,340 256,240" fill="white" opacity="0.25"/>
+  <polygon points="432,160 432,260 256,340 256,240" fill="white" opacity="0.15"/>
+</svg>
