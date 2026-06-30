@@ -1,31 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="192" height="192" rx="45" fill="#6366f1"/>
+  
+  <!-- Rounded corners with gradient -->
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366f1"/>
-      <stop offset="100%" stop-color="#a855f7"/>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#818cf8;stop-opacity:1" />
     </linearGradient>
   </defs>
-
-  <!-- Rounded square background — same as splash icon -->
-  <rect width="512" height="512" rx="115" ry="115" fill="url(#grad)"/>
-
-  <!-- Layer-group icon drawn manually — 3 stacked layers like Font Awesome fa-layer-group -->
-  <!-- Bottom layer (most transparent) -->
-  <polygon
-    points="256,340  80,260  256,180  432,260"
-    fill="white" opacity="0.4"/>
-
-  <!-- Middle layer -->
-  <polygon
-    points="256,290  80,210  256,130  432,210"
-    fill="white" opacity="0.65"/>
-
-  <!-- Top layer (fully opaque) -->
-  <polygon
-    points="256,240  80,160  256,80  432,160"
-    fill="white" opacity="1"/>
-
-  <!-- Connecting sides for 3D depth effect on bottom -->
-  <polygon points="80,160 80,260 256,340 256,240" fill="white" opacity="0.25"/>
-  <polygon points="432,160 432,260 256,340 256,240" fill="white" opacity="0.15"/>
+  
+  <!-- Main icon group -->
+  <g transform="translate(50, 40)">
+    <!-- Clipboard -->
+    <rect x="5" y="0" width="82" height="100" rx="4" fill="none" stroke="white" stroke-width="4"/>
+    
+    <!-- Clip -->
+    <rect x="28" y="-5" width="36" height="12" rx="2" fill="white"/>
+    
+    <!-- Lines (checkbox items) -->
+    <!-- Line 1 -->
+    <g>
+      <rect x="12" y="18" width="8" height="8" rx="2" fill="none" stroke="white" stroke-width="2"/>
+      <line x1="20" y1="22" x2="48" y2="22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    
+    <!-- Line 2 -->
+    <g>
+      <rect x="12" y="35" width="8" height="8" rx="2" fill="none" stroke="white" stroke-width="2"/>
+      <line x1="20" y1="39" x2="48" y2="39" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    
+    <!-- Line 3 (checked) -->
+    <g>
+      <rect x="12" y="52" width="8" height="8" rx="2" fill="white" stroke="white" stroke-width="2"/>
+      <path d="M 14 56 L 16 59 L 19 55" stroke="#6366f1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    
+    <!-- Line 4 -->
+    <g>
+      <rect x="12" y="69" width="8" height="8" rx="2" fill="none" stroke="white" stroke-width="2"/>
+      <line x1="20" y1="73" x2="48" y2="73" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </g>
 </svg>
