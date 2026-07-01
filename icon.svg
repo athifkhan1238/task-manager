@@ -1,46 +1,96 @@
-<svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="192" height="192" rx="45" fill="#6366f1"/>
-  
-  <!-- Rounded corners with gradient -->
-  <defs>
-    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#818cf8;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  
-  <!-- Main icon group -->
-  <g transform="translate(50, 40)">
-    <!-- Clipboard -->
-    <rect x="5" y="0" width="82" height="100" rx="4" fill="none" stroke="white" stroke-width="4"/>
+// ── SERVICE WORKER — Task Manager PWA ────────────────────────────────────────
+const CACHE_NAME = 'task-manager-v1';
+const ASSETS = ['./index.html', './manifest.json'];
+
+// ── INSTALL: cache the app shell ─────────────────────────────────────────────
+self.addEventListener('install', (e) => {
+    e.waitUntil(
+        caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    );
+    self.skipWaiting();
+});
+
+// ── ACTIVATE: clean old caches ────────────────────────────────────────────────
+self.addEventListener('activate', (e) => {
+    e.waitUntil(
+        caches.keys().then(keys =>
+            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+        )
+    );
+    self.clients.claim();
+});
+
+// ── FETCH: serve from cache, fallback to network ──────────────────────────────
+self.addEventListener('fetch', (e) => {
+    e.respondWith(
+        caches.match(e.request).then(cached => cached || fetch(e.request))
+    );
+});
+
+// ── NOTIFICATION CLICK: open the app ─────────────────────────────────────────
+self.addEventListener('notificationclick', (e) => {
+    const { action } = e;
     
-    <!-- Clip -->
-    <rect x="28" y="-5" width="36" height="12" rx="2" fill="white"/>
+    // Handle action button clicks
+    if (action === 'dismiss') {
+        e.notification.close();
+        return;
+    }
     
-    <!-- Lines (checkbox items) -->
-    <!-- Line 1 -->
-    <g>
-      <rect x="12" y="18" width="8" height="8" rx="2" fill="none" stroke="white" stroke-width="2"/>
-      <line x1="20" y1="22" x2="48" y2="22" stroke="white" stroke-width="2" stroke-linecap="round"/>
-    </g>
-    
-    <!-- Line 2 -->
-    <g>
-      <rect x="12" y="35" width="8" height="8" rx="2" fill="none" stroke="white" stroke-width="2"/>
-      <line x1="20" y1="39" x2="48" y2="39" stroke="white" stroke-width="2" stroke-linecap="round"/>
-    </g>
-    
-    <!-- Line 3 (checked) -->
-    <g>
-      <rect x="12" y="52" width="8" height="8" rx="2" fill="white" stroke="white" stroke-width="2"/>
-      <path d="M 14 56 L 16 59 L 19 55" stroke="#6366f1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    </g>
-    
-    <!-- Line 4 -->
-    <g>
-      <rect x="12" y="69" width="8" height="8" rx="2" fill="none" stroke="white" stroke-width="2"/>
-      <line x1="20" y1="73" x2="48" y2="73" stroke="white" stroke-width="2" stroke-linecap="round"/>
-    </g>
-  </g>
-</svg>
+    // Default: open app
+    e.notification.close();
+    e.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+            for (const client of clientList) {
+                if (client.url.includes('index.html') && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) return clients.openWindow('./index.html');
+        })
+    );
+});
+
+// ── NOTIFICATION CLOSE: track when user closes notification ────────────────────
+self.addEventListener('notificationclose', (e) => {
+    console.log('[Service Worker] Notification closed:', e.notification.tag);
+});
+
+// ── PUSH: receive push from main thread ───────────────────────────────────────
+self.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'NOTIFY') {
+        const { title, body, tag, requireInteraction } = e.data;
+        
+        // Check if it's an attendance notification (has 'att-' prefix)
+        const isAttendanceNotif = tag.includes('att-');
+        
+        // Different vibration patterns for different notification types
+        let vibration = [200, 100, 200]; // Default
+        if (tag.includes('overdue')) {
+            vibration = [300, 150, 300]; // Strong for overdue
+        } else if (isAttendanceNotif && tag.includes('critical')) {
+            vibration = [400, 200, 400]; // Extra strong for critical attendance
+        } else if (isAttendanceNotif && tag.includes('warning')) {
+            vibration = [200, 100, 200]; // Medium for warning
+        } else if (isAttendanceNotif && tag.includes('recovered')) {
+            vibration = [100, 50, 100]; // Light for positive news
+        }
+        
+        self.registration.showNotification(title, {
+            body,
+            tag,
+            icon: './icon-192.png',
+            badge: './icon-192.png',
+            vibrate: vibration,
+            requireInteraction: requireInteraction || isAttendanceNotif,
+            actions: [
+                { action: 'open', title: 'Open App' },
+                { action: 'dismiss', title: 'Dismiss' }
+            ],
+            data: {
+                url: './index.html',
+                isAttendance: isAttendanceNotif
+            }
+        });
+    }
+});
