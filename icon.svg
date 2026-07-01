@@ -1,96 +1,39 @@
-// ── SERVICE WORKER — Task Manager PWA ────────────────────────────────────────
-const CACHE_NAME = 'task-manager-v1';
-const ASSETS = ['./index.html', './manifest.json'];
-
-// ── INSTALL: cache the app shell ─────────────────────────────────────────────
-self.addEventListener('install', (e) => {
-    e.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-    );
-    self.skipWaiting();
-});
-
-// ── ACTIVATE: clean old caches ────────────────────────────────────────────────
-self.addEventListener('activate', (e) => {
-    e.waitUntil(
-        caches.keys().then(keys =>
-            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-        )
-    );
-    self.clients.claim();
-});
-
-// ── FETCH: serve from cache, fallback to network ──────────────────────────────
-self.addEventListener('fetch', (e) => {
-    e.respondWith(
-        caches.match(e.request).then(cached => cached || fetch(e.request))
-    );
-});
-
-// ── NOTIFICATION CLICK: open the app ─────────────────────────────────────────
-self.addEventListener('notificationclick', (e) => {
-    const { action } = e;
+<svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <!-- Solid background with rounded corners -->
+  <rect width="192" height="192" rx="50" fill="#6366f1"/>
+  
+  <!-- Main content area -->
+  <g transform="translate(40, 45)">
+    <!-- Large clipboard/task icon -->
+    <!-- Clipboard body -->
+    <rect x="0" y="12" width="110" height="85" rx="6" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
     
-    // Handle action button clicks
-    if (action === 'dismiss') {
-        e.notification.close();
-        return;
-    }
+    <!-- Clipboard clip/header -->
+    <rect x="35" y="0" width="40" height="18" rx="4" fill="white"/>
     
-    // Default: open app
-    e.notification.close();
-    e.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
-            for (const client of clientList) {
-                if (client.url.includes('index.html') && 'focus' in client) {
-                    return client.focus();
-                }
-            }
-            if (clients.openWindow) return clients.openWindow('./index.html');
-        })
-    );
-});
-
-// ── NOTIFICATION CLOSE: track when user closes notification ────────────────────
-self.addEventListener('notificationclose', (e) => {
-    console.log('[Service Worker] Notification closed:', e.notification.tag);
-});
-
-// ── PUSH: receive push from main thread ───────────────────────────────────────
-self.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'NOTIFY') {
-        const { title, body, tag, requireInteraction } = e.data;
-        
-        // Check if it's an attendance notification (has 'att-' prefix)
-        const isAttendanceNotif = tag.includes('att-');
-        
-        // Different vibration patterns for different notification types
-        let vibration = [200, 100, 200]; // Default
-        if (tag.includes('overdue')) {
-            vibration = [300, 150, 300]; // Strong for overdue
-        } else if (isAttendanceNotif && tag.includes('critical')) {
-            vibration = [400, 200, 400]; // Extra strong for critical attendance
-        } else if (isAttendanceNotif && tag.includes('warning')) {
-            vibration = [200, 100, 200]; // Medium for warning
-        } else if (isAttendanceNotif && tag.includes('recovered')) {
-            vibration = [100, 50, 100]; // Light for positive news
-        }
-        
-        self.registration.showNotification(title, {
-            body,
-            tag,
-            icon: './icon-192.png',
-            badge: './icon-192.png',
-            vibrate: vibration,
-            requireInteraction: requireInteraction || isAttendanceNotif,
-            actions: [
-                { action: 'open', title: 'Open App' },
-                { action: 'dismiss', title: 'Dismiss' }
-            ],
-            data: {
-                url: './index.html',
-                isAttendance: isAttendanceNotif
-            }
-        });
-    }
-});
+    <!-- Task items (checkboxes with lines) -->
+    <!-- Task 1 -->
+    <g>
+      <circle cx="15" cy="28" r="6" fill="none" stroke="white" stroke-width="4"/>
+      <line x1="32" y1="28" x2="90" y2="28" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    
+    <!-- Task 2 -->
+    <g>
+      <circle cx="15" cy="45" r="6" fill="none" stroke="white" stroke-width="4"/>
+      <line x1="32" y1="45" x2="90" y2="45" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    
+    <!-- Task 3 (completed) -->
+    <g>
+      <circle cx="15" cy="62" r="6" fill="white" stroke="white" stroke-width="4"/>
+      <polyline points="10,62 14,68 22,56" fill="none" stroke="#6366f1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    
+    <!-- Task 4 -->
+    <g>
+      <circle cx="15" cy="79" r="6" fill="none" stroke="white" stroke-width="4"/>
+      <line x1="32" y1="79" x2="90" y2="79" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>
